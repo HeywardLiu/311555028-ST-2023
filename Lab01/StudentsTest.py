@@ -9,11 +9,13 @@ class Test(unittest.TestCase):
     # test case function to check the Students.set_name function
     def test_0_set_name(self):
         print("\nStart set_name test\n")
-        for i, name in enumerate(self.user_name):
-            self.students.set_name(name)
-            self.user_id.append(i)
-            self.assertEqual(self.students.name[i], self.user_name[i])
-            print("{} {}".format(i, name))
+        
+        for name in self.user_name:
+            id = self.students.set_name(name)
+            self.assertNotIn(id, self.user_id)  # check unique id
+            self.user_id.append(id)
+            print("{} {}".format(id, name))
+            
         print("\nFinish set_name test\n")
 
     # test case function to check the Students.get_name function
@@ -21,14 +23,19 @@ class Test(unittest.TestCase):
         print("\nStart get_name test")
         print("user_id length = {}".format(len(self.user_id)))
         print("user_name length = {}\n".format(len(self.user_name)))
-
-        mex = len(self.user_name)
-        for i in range(len(self.user_name)+1):
-            if(i < mex):
-                self.assertEqual(self.students.get_name(i), self.user_name[i])
-            else:
-                self.assertEqual(self.students.get_name(i), 'There is no such user')
-            print("id {} : {}".format(i, self.students.get_name(i)))
+        
+        mex = 0
+        for i in range(len(self.user_id)+1): # find mex of user_id set
+            if i not in self.user_id:
+                mex = i
+                break
+            
+        for id, name in zip(self.user_id, self.user_name): # check get_name(id) == corresponding user name
+            self.assertEqual(name, self.students.get_name(id))
+            print("id {} : {}".format(id, self.students.get_name(id)))        
+        self.assertEqual('There is no such user', self.students.get_name(mex)) # check mex and its corresponding output
+        print("id {} : {}".format(mex, self.students.get_name(mex)))
+        
         print("\nFinish get_name test")
 
 if __name__ == '__main__':  # pragma: no cover
