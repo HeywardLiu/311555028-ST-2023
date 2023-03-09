@@ -6,3 +6,5 @@
 ![example workflow](https://github.com/HeywardLiu/311555028-ST-2023/actions/workflows/Lab01-CI.yml/badge.svg)
 
 ![example workflow](https://github.com/HeywardLiu/311555028-ST-2023/actions/workflows/Lab02-CI.yml/badge.svg)
+
+![example workflow](https://github.com/HeywardLiu/311555028-ST-2023/actions/workflows/Lab03-CI.yml/badge.svg)
