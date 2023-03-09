@@ -23,6 +23,7 @@ jobs:
     - name: Lint with flake8
       run: |
         # Check PEP8 coding style
+        cd Lab03
         flake8 calculator_test.py
     - name: Test with unittest
       run: |
