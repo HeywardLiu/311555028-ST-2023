@@ -1,4 +1,4 @@
-name: Lab03 CI
+name: Lab04 CI
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
 jobs:
@@ -29,7 +29,7 @@ jobs:
         
     - name: Test with unittest
       run: |
-        cd Lab03
+        cd Lab04
         # Check PEP8 coding style
         flake8 app.py
         # Test website with selenium
