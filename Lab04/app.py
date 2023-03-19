@@ -12,7 +12,10 @@ options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-gpu")
 
 # Part 1
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(
+    service=Service(ChromeDriverManager().install()),
+    options=options
+)
 nycu_url = "https://www.nycu.edu.tw/"
 driver.get(nycu_url)
 driver.maximize_window()
@@ -20,7 +23,8 @@ time.sleep(1)
 driver.find_element("link text", "新聞").click()
 driver.find_element(By.CLASS_NAME, "su-post").click()
 time.sleep(5)
-post_title = driver.find_element(By.CLASS_NAME, "single-post-title.entry-title").text
+post_title = driver.find_element(
+                By.CLASS_NAME, "single-post-title.entry-title").text
 print(post_title)
 time.sleep(5)
 
