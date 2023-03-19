@@ -1,0 +1,40 @@
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import time
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-gpu")
+
+# Part 1
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+nycu_url = "https://www.nycu.edu.tw/"
+driver.get(nycu_url)
+driver.maximize_window()
+time.sleep(1)
+driver.find_element("link text", "新聞").click()
+driver.find_element(By.CLASS_NAME, "su-post").click()
+time.sleep(5)
+post_title = driver.find_element(By.CLASS_NAME, "single-post-title.entry-title").text
+print(post_title)
+time.sleep(5)
+
+paragraph_list = driver.find_elements(By.CLASS_NAME, "entry-content.clr")
+for p in paragraph_list:
+    print(p.text)
+
+
+# Google Serach id and Print title of the second result
+driver.switch_to.new_window("google")
+driver.get("https://www.google.com/")
+driver.find_element(By.CLASS_NAME, "gLFyf").send_keys("311555028")
+driver.find_element(By.CLASS_NAME, "gLFyf").send_keys(Keys.ENTER)
+time.sleep(5)
+print(driver.find_elements(By.CLASS_NAME, "LC20lb.MBeuO.DKV0Md")[1].text)
+time.sleep(5)
+driver.close()
