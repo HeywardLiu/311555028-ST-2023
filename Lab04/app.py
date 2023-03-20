@@ -24,14 +24,17 @@ driver.get(nycu_url)
 driver.maximize_window()
 
 # driver.find_element("link text", "新聞").click()
-element = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.LINK_TEXT, "新聞")))
+element = WebDriverWait(driver, 5).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "新聞")))
 element.click()
 # driver.find_element(By.CLASS_NAME, "su-post").click()
-element = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
+element = WebDriverWait(driver, 5).until(
+    EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
 element.click()
 # post_title = driver.find_element(
 #                 By.CLASS_NAME, "single-post-title.entry-title").text
-element = WebDriverWait(driver, 5).until(EC.element_to_be_selected(By.CLASS_NAME, "single-post-title.entry-title"))
+element = WebDriverWait(driver, 5).until(
+    EC.element_to_be_selected(By.CLASS_NAME, "single-post-title.entry-title"))
 post_title = element.text
 print(post_title)
 time.sleep(5)
