@@ -39,7 +39,7 @@ post_title = element.text
 print(post_title)
 
 # paragraph_list = driver.find_elements(By.CLASS_NAME, "entry-content.clr")
-paragraph_list =  WebDriverWait(driver, 5).until(
+paragraph_list = WebDriverWait(driver, 5).until(
     lambda d: d.find_element(By.CLASS_NAME, "entry-content.clr"))
 print(paragraph_list.text)
 
