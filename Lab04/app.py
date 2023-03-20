@@ -34,14 +34,14 @@ element.click()
 # post_title = driver.find_element(
 #                 By.CLASS_NAME, "single-post-title.entry-title").text
 element = WebDriverWait(driver, 5).until(
-    EC.element_to_be_selected(By.CLASS_NAME, "single-post-title.entry-title"))
+    lambda d: d.find_element(By.CLASS_NAME, "single-post-title.entry-title"))
 post_title = element.text
 print(post_title)
-time.sleep(5)
 
-paragraph_list = driver.find_elements(By.CLASS_NAME, "entry-content.clr")
-for p in paragraph_list:
-    print(p.text)
+# paragraph_list = driver.find_elements(By.CLASS_NAME, "entry-content.clr")
+paragraph_list =  WebDriverWait(driver, 5).until(
+    lambda d: d.find_element(By.CLASS_NAME, "entry-content.clr"))
+print(paragraph_list.text)
 
 
 # Google Serach id and Print title of the second result
