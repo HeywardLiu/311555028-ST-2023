@@ -23,21 +23,26 @@ nycu_url = "https://www.nycu.edu.tw/"
 driver.get(nycu_url)
 driver.maximize_window()
 
+print(driver.current_url)
 # driver.find_element("link text", "新聞").click()
 element = WebDriverWait(driver, 5).until(
         EC.element_to_be_clickable((By.LINK_TEXT, "新聞")))
 element.click()
+print(driver.current_url)
+
 # driver.find_element(By.CLASS_NAME, "su-post").click()
 element = WebDriverWait(driver, 5).until(
     EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
 element.click()
+print(driver.current_url)
+
 # post_title = driver.find_element(
 #                 By.CLASS_NAME, "single-post-title.entry-title").text
 element = WebDriverWait(driver, 5).until(
     lambda d: d.find_element(By.CLASS_NAME, "single-post-title.entry-title"))
 post_title = element.text
+print(driver.current_url)
 print(post_title)
-
 # paragraph_list = driver.find_elements(By.CLASS_NAME, "entry-content.clr")
 paragraph_list = WebDriverWait(driver, 5).until(
     lambda d: d.find_element(By.CLASS_NAME, "entry-content.clr"))
