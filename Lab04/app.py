@@ -30,10 +30,11 @@ element = WebDriverWait(driver, 5).until(
 element.click()
 print(driver.current_url)
 
-# driver.find_element(By.CLASS_NAME, "su-post").click()
-element = WebDriverWait(driver, 5).until(
-    EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
-element.click()
+time.sleep(10)
+driver.find_element(By.CLASS_NAME, "su-post").click()
+# element = WebDriverWait(driver, 5).until(
+#     EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
+# element.click()
 print(driver.current_url)
 
 # post_title = driver.find_element(
