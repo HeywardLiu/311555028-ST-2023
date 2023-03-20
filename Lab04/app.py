@@ -4,6 +4,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 options = Options()
@@ -16,15 +18,21 @@ driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
 )
+time.sleep(5)
 nycu_url = "https://www.nycu.edu.tw/"
 driver.get(nycu_url)
 driver.maximize_window()
-time.sleep(1)
-driver.find_element("link text", "新聞").click()
-driver.find_element(By.CLASS_NAME, "su-post").click()
-time.sleep(5)
-post_title = driver.find_element(
-                By.CLASS_NAME, "single-post-title.entry-title").text
+
+# driver.find_element("link text", "新聞").click()
+element = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.LINK_TEXT, "新聞")))
+element.click()
+# driver.find_element(By.CLASS_NAME, "su-post").click()
+element = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "su-post")))
+element.click()
+# post_title = driver.find_element(
+#                 By.CLASS_NAME, "single-post-title.entry-title").text
+element = WebDriverWait(driver, 5).until(EC.element_to_be_selected(By.CLASS_NAME, "single-post-title.entry-title"))
+post_title = element.text
 print(post_title)
 time.sleep(5)
 
