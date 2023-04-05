@@ -15,8 +15,9 @@
 #include <random>
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace llvm;
-
+using namespace std;
 
 char LabPass::ID = 0;
 
@@ -24,11 +25,14 @@ bool LabPass::doInitialization(Module &M) {
   return true;
 }
 
-static void dumpIR(Function &F)
+static void dumpIR(Module &M)
 {
-  for (auto &BB : F) {
+    errs() << "\n\n---- dumpIR ----\n";
+  for (auto &F : M) {      
     errs() << F.getName() << "\n";
-    errs() << BB << "\n";
+    for (auto &BB : F) {
+        errs() << BB << "\n";
+    }
   }
 }
 
@@ -61,42 +65,40 @@ static Constant* getI8StrVal(Module &M, char const *str, Twine const &name) {
   return strVal;
 }
 
-const char* getSpace(int num) {
-    std::string str;
-    for(int i = 0; i < num; i++) {
-        str += " ";
-    }
-    std::cout << "|" << str << "|" << std::endl;
-    return str.c_str();
-}
 
 bool LabPass::runOnModule(Module &M) {
   errs() << "runOnModule\n";
+  LLVMContext &ctx = M.getContext();
+
   for (auto &F : M) {
     if (F.empty()) 
       continue;
 
+    errs() << "\n ------------------- \n" << F << "\n ------------------- \n";
+
     BasicBlock &Bstart = F.front();
-    BasicBlock &Bend = F.back();
-    Instruction *Istart = &(Bstart.front());  // Get the first instruction in the first BB
+    Instruction &Istart = Bstart.front();  // Get the first instruction in the first BB
+    FunctionCallee printfCallee = printfPrototype(M);
+    IRBuilder<> Builder(&Istart);
 
-    // std::cout << getDepth(M, F) << std::endl;
+    // Cast the function address to an integer type
+    Type *IntPtrTy = Type::getIntNTy(ctx, sizeof(void*) * 8);
 
-    std::string str = F.getName().str() + ": ";
-    Constant *funcName = getI8StrVal(M, str.c_str(), "funcName");  // Cast to c string
-    // Constant *space = getI8StrVal(M, getSpace(getDepth(M, F)), "space");
-    Constant *funcAddr = ConstantExpr::getBitCast(&F, Type::getInt8PtrTy(M.getContext()));
-    Constant *newLine = getI8StrVal(M, "\n", "newline");
+    // Get the function address as a void pointer
+    Constant *funcAddr = ConstantExpr::getBitCast(&F, Type::getInt8PtrTy(ctx));
 
-    FunctionCallee printfCallee = printfPrototype(M);    
-    IRBuilder<> Builder(Istart);
-    Builder.CreateCall(printfCallee, {funcName} );
-    // Builder.CreateCall(printfCallee, {space} );
-    Builder.CreateCall(printfCallee, {funcAddr} );
-    Builder.CreateCall(printfCallee, {newLine});
-    
-    dumpIR(F);
+    // Cast the function address to an integer type
+    Constant *funcAddrInt = ConstantExpr::getPtrToInt(funcAddr, IntPtrTy);
+
+    // Create a format string for printf
+    std::string formatStr = F.getName().str() + ": 0x%lx\n";
+    Constant *formatCStr = getI8StrVal(M, formatStr.c_str(), "formatCStr");
+
+    // Call printf with the function address as an argument
+
+    Builder.CreateCall(printfCallee, {formatCStr, funcAddrInt});
   }
+  dumpIR(M);
   
   return true;
 }
