@@ -20,7 +20,7 @@ driver = webdriver.Chrome(
 )
 time.sleep(5)
 url = "https://docs.python.org/3/tutorial/index.html"
-driver.get(url)
+# WebDriverWait(driver,5).until(get(url)
 driver.maximize_window()
 
 

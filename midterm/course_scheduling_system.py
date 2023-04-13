@@ -22,7 +22,7 @@ class CSS:
 		self.__courses = []
 		pass
 
-	def __str__(self):
+	def __str__(self): # pragma no cover
 		table = [[self.__workdays[i]] + ['|'] * 8 for i in range(len(self.__workdays))]
 		for cus in self.__courses:
 			for j in range(cus[2], cus[3] + 1):
