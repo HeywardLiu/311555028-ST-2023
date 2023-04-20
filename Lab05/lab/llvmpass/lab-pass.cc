@@ -131,7 +131,8 @@ bool LabPass::runOnModule(Module &M)
         true, // is constant
         GlobalValue::PrivateLinkage,
         strConstant,
-        "space");
+        "space"
+    );
 
     errs() << "runOnModule\n";
     FunctionCallee exitCallee = exitPrototype(M);
@@ -159,10 +160,9 @@ bool LabPass::runOnModule(Module &M)
 
         ConstantInt *constInt = dyn_cast<ConstantInt>(globalVar->getInitializer());
         unsigned _depth = constInt->getSExtValue();
-        errs() << _depth << "\n";
+        // errs() << _depth << "\n";
         Value *globalVal = Builder.CreateLoad(IntegerType::getInt64Ty(ctx), globalVar);
-        errs() << "\n"
-               << "Global value: " << constInt->getSExtValue() << "\n";
+        // errs() << "\n" << "Global value: " << constInt->getSExtValue() << "\n";
 
         std::string f_info = "";
 
