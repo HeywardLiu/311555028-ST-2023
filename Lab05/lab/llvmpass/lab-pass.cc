@@ -4,6 +4,9 @@
   * https://llvm.org/docs/GettingStarted.html
   * https://llvm.org/docs/WritingAnLLVMPass.html
   * https://llvm.org/docs/ProgrammersManual.html
+  * https://stackoverflow.com/questions/28168815/adding-a-function-call-in-my-ir-code-in-llvm
+  * https://stackoverflow.com/questions/30234027/how-to-call-printf-in-llvm-through-the-module-builder-system
+  * https://gite.lirmm.fr/grevy/llvm-tutorial/-/blob/master/src/exercise3bis/ReplaceFunction.cpp
  */
 #include "lab-pass.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -12,95 +15,199 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Constants.h"
 
-#include <random>
-#include <iostream>
-#include <string>
-#include <vector>
+#include "llvm/Pass.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/DebugInfo.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/InstIterator.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/DebugInfoMetadata.h"
+
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Type.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Type.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/raw_ostream.h"
+
+#include "llvm/Analysis/CallGraph.h"
+
 using namespace llvm;
-using namespace std;
 
 char LabPass::ID = 0;
 
-bool LabPass::doInitialization(Module &M) {
-  return true;
+bool LabPass::doInitialization(Module &M)
+{
+    return true;
 }
 
-static void dumpIR(Module &M)
+static Constant *getI8StrVal(Module &M, char const *str, Twine const &name)
 {
-    errs() << "\n\n---- dumpIR ----\n";
-  for (auto &F : M) {      
-    errs() << F.getName() << "\n";
-    for (auto &BB : F) {
+    LLVMContext &ctx = M.getContext();
+
+    Constant *strConstant = ConstantDataArray::getString(ctx, str);
+
+    GlobalVariable *gvStr = new GlobalVariable(M, strConstant->getType(), true,
+                                               GlobalValue::InternalLinkage, strConstant, name);
+
+    Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(ctx));
+    Constant *indices[] = {zero, zero};
+    Constant *strVal = ConstantExpr::getGetElementPtr(Type::getInt8PtrTy(ctx),
+                                                      gvStr, indices, true);
+
+    return strVal;
+}
+
+static FunctionCallee printfPrototype(Module &M)
+{
+    LLVMContext &ctx = M.getContext();
+
+    FunctionType *printfType = FunctionType::get(
+        Type::getInt32Ty(ctx),
+        {Type::getInt8PtrTy(ctx)},
+        true);
+
+    FunctionCallee printfCallee = M.getOrInsertFunction("printf", printfType);
+
+    return printfCallee;
+}
+
+static FunctionCallee exitPrototype(Module &M)
+{
+    LLVMContext &ctx = M.getContext();
+
+    FunctionType *exitType = FunctionType::get(
+        Type::getInt32Ty(ctx),
+        {Type::getInt32Ty(ctx)},
+        false);
+
+    FunctionCallee exitCallee = M.getOrInsertFunction("exit", exitType);
+
+    return exitCallee;
+}
+
+static void dumpIR(Function &F)
+{
+    for (auto &BB : F)
+    {
+        errs() << "BB: "
+               << "\n";
         errs() << BB << "\n";
     }
-  }
 }
 
-static FunctionCallee printfPrototype(Module &M) {
-  LLVMContext &ctx = M.getContext();
+bool LabPass::runOnModule(Module &M)
+{
 
-  FunctionType *printfType = FunctionType::get(
-    Type::getInt32Ty(ctx),
-    { Type::getInt8PtrTy(ctx) },
-    true);
+    LLVMContext &ctx = M.getContext();
 
-  FunctionCallee printfCallee = M.getOrInsertFunction("printf", printfType);
+    // create a new LLVM module
+    llvm::Module *module = new llvm::Module("MyModule", ctx);
 
-  return printfCallee;
-}
+    // create a new global variable of type i32 with initial value 0
+    llvm::Constant *initValue = llvm::ConstantInt::get(ctx, llvm::APInt(32, -1));
+    llvm::GlobalVariable *globalVar = new llvm::GlobalVariable(
+        M,
+        llvm::Type::getInt32Ty(ctx),
+        false,
+        GlobalValue::InternalLinkage,
+        initValue, "glob_depth");
 
-static Constant* getI8StrVal(Module &M, char const *str, Twine const &name) {
-  LLVMContext &ctx = M.getContext();
+    // Create a global string with name "space"
+    GlobalVariable *spaceGlobal = new GlobalVariable(M, llvm::ArrayType::get(llvm::Type::getInt8Ty(ctx), 2),
+                                                     true, llvm::GlobalValue::PrivateLinkage, 0, "space");
+    spaceGlobal->setInitializer(llvm::ConstantDataArray::getString(ctx, " ", true));
 
-  Constant *strConstant = ConstantDataArray::getString(ctx, str);
+    Constant *strConstant = ConstantDataArray::getString(ctx, "                                              ");
+    GlobalVariable *globalString = new GlobalVariable(
+        M,
+        strConstant->getType(),
+        true, // is constant
+        GlobalValue::PrivateLinkage,
+        strConstant,
+        "space"
+    );
 
-  GlobalVariable *gvStr = new GlobalVariable(M, strConstant->getType(), true,
-    GlobalValue::InternalLinkage, strConstant, name);
-
-  Constant *zero = Constant::getNullValue(IntegerType::getInt32Ty(ctx));
-  Constant *indices[] = { zero, zero };
-  Constant *strVal = ConstantExpr::getGetElementPtr(Type::getInt8PtrTy(ctx),
-    gvStr, indices, true);
-
-  return strVal;
-}
-
-
-bool LabPass::runOnModule(Module &M) {
-  errs() << "runOnModule\n";
-  LLVMContext &ctx = M.getContext();
-
-  for (auto &F : M) {
-    if (F.empty()) 
-      continue;
-
-    errs() << "\n ------------------- \n" << F << "\n ------------------- \n";
-
-    BasicBlock &Bstart = F.front();
-    Instruction &Istart = Bstart.front();  // Get the first instruction in the first BB
+    errs() << "runOnModule\n";
+    FunctionCallee exitCallee = exitPrototype(M);
     FunctionCallee printfCallee = printfPrototype(M);
-    IRBuilder<> Builder(&Istart);
+    for (auto &F : M)
+    {
+        if (F.empty())
+        {
+            continue;
+        }
+        StringMap<Constant *> CallCounterMap;
+        StringMap<Constant *> funcNameMap;
+        errs() << F.getName() << "\n";
+        BasicBlock &Bstart = F.front();
+        Instruction &Istart = Bstart.front();
+        IRBuilder<> Builder(&Istart);
 
-    // Cast the function address to an integer type
-    Type *IntPtrTy = Type::getIntNTy(ctx, sizeof(void*) * 8);
+        GlobalVariable *key = M.getNamedGlobal("glob_depth");
+        Value *loadValue = Builder.CreateLoad(globalVar->getValueType(), globalVar, "glob_depth");
+        Value *addValue = llvm::ConstantInt::get(ctx, llvm::APInt(32, 1));
+        Value *sumValue = Builder.CreateAdd(loadValue, addValue, "sum");
+        StoreInst *Store = Builder.CreateStore(sumValue, globalVar);
 
-    // Get the function address as a void pointer
-    Constant *funcAddr = ConstantExpr::getBitCast(&F, Type::getInt8PtrTy(ctx));
+        loadValue = Builder.CreateLoad(globalVar->getValueType(), globalVar, "glob_depth");
 
-    // Cast the function address to an integer type
-    Constant *funcAddrInt = ConstantExpr::getPtrToInt(funcAddr, IntPtrTy);
+        ConstantInt *constInt = dyn_cast<ConstantInt>(globalVar->getInitializer());
+        unsigned _depth = constInt->getSExtValue();
+        // errs() << _depth << "\n";
+        Value *globalVal = Builder.CreateLoad(IntegerType::getInt64Ty(ctx), globalVar);
+        // errs() << "\n" << "Global value: " << constInt->getSExtValue() << "\n";
 
-    // Create a format string for printf
-    std::string formatStr = F.getName().str() + ": 0x%lx\n";
-    Constant *formatCStr = getI8StrVal(M, formatStr.c_str(), "formatCStr");
+        std::string f_info = "";
 
-    // Call printf with the function address as an argument
+        int depth = 0;
 
-    Builder.CreateCall(printfCallee, {formatCStr, funcAddrInt});
-  }
-  dumpIR(M);
-  
-  return true;
+        f_info = f_info + (std::string(depth, ' ') + F.getName().str());
+        std::vector<Value *> printfArgument;
+
+        Value *stringPointer = Builder.CreateBitCast(
+            globalString,
+            Type::getInt8PtrTy(ctx));
+
+        printfArgument.push_back(Builder.CreateGlobalStringPtr(
+            ("%.*s" + f_info + ": 0x%lx\n").c_str(), "fmt"));
+
+        printfArgument.push_back(loadValue);
+
+        printfArgument.push_back(stringPointer);
+
+        printfArgument.push_back(Builder.CreatePtrToInt(
+            ConstantExpr::getBitCast(&F, Type::getInt64PtrTy(ctx)), Type::getInt64Ty(ctx)));
+        Builder.CreateCall(printfCallee, printfArgument);
+
+        errs() << "Depth of calling stack for function " << F.getName() << ": " << depth << "\n";
+
+        dumpIR(F);
+
+        for (BasicBlock &BB : F)
+        {
+            for (Instruction &I : BB)
+            {
+                if (ReturnInst *ret = dyn_cast<ReturnInst>(&I))
+                {
+                    IRBuilder<> Builder_end(ret);
+                    // Create a new instruction right before the return instruction
+                    loadValue = Builder_end.CreateLoad(globalVar->getValueType(), globalVar, "glob_depth");
+                    addValue = llvm::ConstantInt::get(ctx, llvm::APInt(32, -1));
+                    sumValue = Builder_end.CreateAdd(loadValue, addValue, "sum");
+                    Store = Builder_end.CreateStore(sumValue, globalVar);
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 static RegisterPass<LabPass> X("labpass", "Lab Pass", false, false);
